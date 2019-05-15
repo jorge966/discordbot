@@ -113,6 +113,7 @@ async def gr(ctx, arg):
                 foundUser = item
                 userFound = True
             break
+
         user_id = foundUser["account_id"]
         recent = requests.get("https://api.opendota.com/api/players/" + str(user_id) + "/recentMatches")
         await ctx.send("getting recent matches...")
@@ -179,6 +180,27 @@ async def adduser(ctx, user, acct_id):
     saveUsers(userData)
 
     await ctx.send("Successfully Added {}".format(username))
+
+#@bot.command()
+#will find a way to make this work but letting it go for now
+# async def deleteByName(ctx, name):
+#     userData = loadUsers()
+#
+#     user_found = False
+#     temp = None
+#
+#     for item in userData["users"]:
+#         if name == item["name"]:
+#             user_found = True
+#             temp = item
+#             break
+#
+#     userData['users'].remove(temp)
+#     await ctx.send("user successfully deleted")
+#     print()
+
+
+
 
 @bot.command()
 async def findUserByName(ctx, name):
