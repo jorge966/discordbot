@@ -1,7 +1,7 @@
 import config
 import requests
 import json
-from discord.ext import commands
+from discord.ext import commands , tasks
 import time as time
 
 
@@ -11,6 +11,12 @@ bot = commands.Bot(command_prefix='!')
 @bot.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
+
+@bot.command()
+async def refresh(ctx):
+    url = "https://api.opendota.com/api/players/92576390/refresh"
+    print(url)
+
 
 @bot.command()
 async def ping(ctx):
@@ -63,6 +69,7 @@ async def gr(ctx, arg):
         json_data = json.loads(recent.text)
         match_id = json_data[0]['match_id']
         url = "https://api.opendota.com/api/matches/" + str(match_id)
+        addMatchid(arg, match_id)
         await ctx.send("getting match...")
         time.sleep(2)
         data = requests.get(url)
@@ -112,15 +119,20 @@ async def gr(ctx, arg):
             if arg == item["name"]:
                 foundUser = item
                 userFound = True
-            break
+                break
 
         user_id = foundUser["account_id"]
-        recent = requests.get("https://api.opendota.com/api/players/" + str(user_id) + "/recentMatches")
+        url = "https://api.opendota.com/api/players/" + str(user_id) + "/recentMatches"
+        print(url)
+        recent = requests.get(url)
         await ctx.send("getting recent matches...")
         time.sleep(2)
         json_data = json.loads(recent.text)
+        print(json_data)
         match_id = json_data[0]['match_id']
+        print(match_id)
         url = "https://api.opendota.com/api/matches/" + str(match_id)
+        addMatchid(foundUser, match_id)
         await ctx.send("getting match...")
         time.sleep(2)
         data = requests.get(url)
@@ -181,6 +193,21 @@ async def adduser(ctx, user, acct_id):
 
     await ctx.send("Successfully Added {}".format(username))
 
+def addMatchid(user , Match_id):
+    user = user
+    match = Match_id
+
+    matchData = loadMatchid()
+
+    lastMatch = {}
+
+    lastMatch['name'] = user
+    lastMatch['match_id'] = match
+
+    matchData['Matches'].append(lastMatch)
+
+    saveMatchid(matchData)
+
 #@bot.command()
 #will find a way to make this work but letting it go for now
 # async def deleteByName(ctx, name):
@@ -230,9 +257,21 @@ def saveUsers(json_file):
     with open('magic.txt', 'w') as outfile:
         json.dump(json_file, outfile)
 
+
+def saveMatchid(json_file):
+    with open('matchid.txt', 'w') as outfile:
+        json.dump(json_file, outfile)
+
 def loadUsers():
     temp = None
     with open('magic.txt') as json_file:
+        data = json.load(json_file)
+        temp = data
+    return temp
+
+def loadMatchid():
+    temp = None
+    with open('matchid.txt') as json_file:
         data = json.load(json_file)
         temp = data
     return temp
