@@ -13,12 +13,6 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
 
 @bot.command()
-async def refresh(ctx):
-    url = "https://api.opendota.com/api/players/92576390/refresh"
-    print(url)
-
-
-@bot.command()
 async def ping(ctx):
     await ctx.send('pong')
 
@@ -69,7 +63,6 @@ async def gr(ctx, arg):
         json_data = json.loads(recent.text)
         match_id = json_data[0]['match_id']
         url = "https://api.opendota.com/api/matches/" + str(match_id)
-        addMatchid(arg, match_id)
         await ctx.send("getting match...")
         time.sleep(2)
         data = requests.get(url)
@@ -128,11 +121,9 @@ async def gr(ctx, arg):
         await ctx.send("getting recent matches...")
         time.sleep(2)
         json_data = json.loads(recent.text)
-        print(json_data)
         match_id = json_data[0]['match_id']
-        print(match_id)
         url = "https://api.opendota.com/api/matches/" + str(match_id)
-        addMatchid(foundUser, match_id)
+        addMatchid(arg, match_id)
         await ctx.send("getting match...")
         time.sleep(2)
         data = requests.get(url)
@@ -194,38 +185,18 @@ async def adduser(ctx, user, acct_id):
     await ctx.send("Successfully Added {}".format(username))
 
 def addMatchid(user , Match_id):
-    user = user
+    username = user
     match = Match_id
 
     matchData = loadMatchid()
 
     lastMatch = {}
-
-    lastMatch['name'] = user
-    lastMatch['match_id'] = match
+    lastMatch['name'] = username
+    lastMatch['match_id'] = int(match)
 
     matchData['Matches'].append(lastMatch)
 
     saveMatchid(matchData)
-
-#@bot.command()
-#will find a way to make this work but letting it go for now
-# async def deleteByName(ctx, name):
-#     userData = loadUsers()
-#
-#     user_found = False
-#     temp = None
-#
-#     for item in userData["users"]:
-#         if name == item["name"]:
-#             user_found = True
-#             temp = item
-#             break
-#
-#     userData['users'].remove(temp)
-#     await ctx.send("user successfully deleted")
-#     print()
-
 
 
 
@@ -275,5 +246,15 @@ def loadMatchid():
         data = json.load(json_file)
         temp = data
     return temp
+
+@tasks.loop(seconds=5.0)
+async def slow_count():
+    print("ping")
+
+
+
+
+slow_count.start()
+
 
 bot.run(config.Bot_Token)
