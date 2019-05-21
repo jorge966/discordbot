@@ -26,6 +26,6 @@ class mongoConnection:
 
     # updates a current document
     def updateOneByAccountId(self, account_id, object):
-        query = { "account_id": account_id }
-        update = { "$set": object }
+        query = { "match_id": account_id }
+        update = { "$set": { "match_id": object } }
         self.db.update_one(query, update)

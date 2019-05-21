@@ -131,28 +131,37 @@ async def gr(ctx, arg):
                 await ctx.send(persona_name + " won their last game" + " as " + temp_hero)
             else:
                 await ctx.send(persona_name + " lost their last game" + " as " + temp_hero)
+    else:
+        await  ctx.send("I couldn't find anything in the database")
 
 @bot.command()
 async def adduser(ctx, user, acct_id):
 
     acct_id = acct_id
     username = user
-
+    vars_1 = acctIdDb.getAllDocuments()
     # First Load Existing Users
+    for item in vars_1:
+        if user == item['name']:
+            await ctx.send("name is already in the system")
+            break
+
+        elif user != item["name"]:
+            # Create the user data
+            user = {}
+            user['name'] = username
+            user['account_id'] = int(acct_id)
+
+            # Append the user to the userData file
+            acctIdDb.insertOne(user)
+
+            # Save the data
+
+            await ctx.send("Successfully Added {}".format(username))
+            break
 
 
-    # Create the user data
-    user = {}
-    user['name'] = username
-    user['account_id'] = int(acct_id)
 
-    # Append the user to the userData file
-    acctIdDb.insertOne(user)
-
-    # Save the data
-
-
-    await ctx.send("Successfully Added {}".format(username))
 
 
 @bot.command()
@@ -184,7 +193,7 @@ def addMatchidDB(user , Match_id):
 
 @tasks.loop(seconds=10.0)
 async def slow_count():
-    
+
     vars_user = acctIdDb.getAllDocuments()
     vars_match = lastMatchDb.getAllDocuments()
 
@@ -214,15 +223,21 @@ async def slow_count():
     updated_match_id = json_data[0]['match_id']
     newMatch = None
     foundmatch = False
+    oldMatch = None
+    for item in vars_match:
+        oldMatch = item['match_id']
+        break
+    vars_match.rewind()
+
     for item in vars_match:
         if updated_match_id != item['match_id']:
             item['match_id'] = updated_match_id
             foundmatch = True
             newMatch = item
             print(newMatch)
-            lastMatchDb.updateOneByAccountId(user_id, newMatch)
+            lastMatchDb.updateOneByAccountId(oldMatch, newMatch['match_id'])
             print("updated")
-            url = "https://api.opendota.com/api/matches/" + str(newMatch)
+            url = "https://api.opendota.com/api/matches/" + str(newMatch['match_id'])
             print("getting match...")
             data = requests.get(url)
             json_data2 = json.loads(data.text)
@@ -257,7 +272,6 @@ async def slow_count():
                     print(persona_name + " lost their last game" + " as " + temp_hero)
             break
         else:
-            await channel.send("no new update")
             break
 
     #need to rewind mongo cursor after every use
