@@ -235,7 +235,7 @@ async def slow_count():
             foundmatch = True
             newMatch = item
             print(newMatch)
-            lastMatchDb.updateOneByAccountId(oldMatch, newMatch['match_id'])
+            lastMatchDb.updateOneByMatchid(oldMatch, newMatch['match_id'])
             print("updated")
             url = "https://api.opendota.com/api/matches/" + str(newMatch['match_id'])
             print("getting match...")

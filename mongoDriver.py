@@ -25,7 +25,7 @@ class mongoConnection:
         return self.db.find()
 
     # updates a current document
-    def updateOneByAccountId(self, account_id, object):
-        query = { "match_id": account_id }
+    def updateOneByMatchid(self, match_id, object):
+        query = { "match_id": match_id }
         update = { "$set": { "match_id": object } }
         self.db.update_one(query, update)
