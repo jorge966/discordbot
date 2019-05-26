@@ -1,15 +1,18 @@
-from discord import Client
-
 import config
 import requests
 import json
 from discord.ext import commands, tasks
 import time as time
 import mongoDriver as md
+from twitch import TwitchClient
+
+
 import pprint as pp
+import logging
 
 acctIdDb = md.mongoConnection("127.0.0.1", "matchDatabase", "Users")
 lastMatchDb = md.mongoConnection("127.0.0.1", "matchDatabase", "lastMatches")
+twitchDb = md.mongoConnection('127.0.0.1', 'TwitchInfo', 'Twitchusers')
 
 
 
@@ -20,6 +23,35 @@ bot = commands.Bot(command_prefix='!')
 @bot.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
+
+@bot.command()
+async def live(ctx,arg):
+    vars = twitchDb.getAllDocuments()
+
+    twitch_name = None
+
+    for item in vars:
+        if arg == item['username']:
+            twitch_name = item
+
+    twitch_id = twitch_name['user_id']
+
+    client = TwitchClient(config.twitch_client)
+    channel = client.streams.get_stream_by_user(twitch_id)
+
+
+    if channel == None:
+        await ctx.send(twitch_name['username'] + " is not live right now")
+
+    else:
+        await  ctx.send(twitch_name['username'] + " is live right now!")
+
+
+
+
+
+
+
 
 
 @bot.command()
@@ -162,6 +194,19 @@ async def adduser(ctx, user, acct_id):
 
 
 
+@bot.command()
+async def addTwitchuser(ctx, username , user_id):
+    user = username
+    user_id = user_id
+
+    Twitch_info = {}
+    Twitch_info['username'] = user
+    Twitch_info['user_id'] = int(user_id)
+
+    twitchDb.insertOne(Twitch_info)
+
+    await ctx.send("user has been added")
+
 
 
 @bot.command()
@@ -191,8 +236,11 @@ def addMatchidDB(user , Match_id):
 
     lastMatchDb.insertOne(lastMatch)
 
+
+
 @tasks.loop(seconds=10.0)
 async def slow_count():
+    channel = bot.get_channel(547669771450187778)
 
     vars_user = acctIdDb.getAllDocuments()
     vars_match = lastMatchDb.getAllDocuments()
@@ -278,6 +326,17 @@ async def slow_count():
     vars_match.rewind()
     vars_user.rewind()
 
+@slow_count.before_loop
+async def before_loop():
+    await bot.wait_until_ready()
+
+
+
 slow_count.start()
+
+
+
+
+#slow_count.start()
 
 bot.run(config.Bot_Token)
