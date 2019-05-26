@@ -27,7 +27,6 @@ async def on_ready():
 @bot.command()
 async def live(ctx,arg):
     vars = twitchDb.getAllDocuments()
-
     twitch_name = None
 
     for item in vars:
@@ -35,14 +34,11 @@ async def live(ctx,arg):
             twitch_name = item
 
     twitch_id = twitch_name['user_id']
-
     client = TwitchClient(config.twitch_client)
     channel = client.streams.get_stream_by_user(twitch_id)
 
-
     if channel == None:
         await ctx.send(twitch_name['username'] + " is not live right now")
-
     else:
         await  ctx.send(twitch_name['username'] + " is live right now!")
 
@@ -106,7 +102,6 @@ async def gr(ctx, arg):
 
     elif not isAccountId:
         # Load User Data
-
         vars_name = acctIdDb.getAllDocuments()
         # Found User Bool
         userFound = False
