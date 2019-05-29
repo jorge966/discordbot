@@ -4,7 +4,6 @@ import configparser
 config = configparser.ConfigParser()
 config.read('config/config.ini')
 
-
 #Bot info
 
 Bot_username = config['Bot Info']['username']
