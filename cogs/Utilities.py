@@ -1,9 +1,7 @@
-import discord
 import botMain
-import config
 from discord.ext import commands
 import time
-import os
+
 
 class Utilities(commands.Cog):
 

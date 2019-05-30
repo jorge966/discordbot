@@ -27,6 +27,10 @@ class Bot(commands.Bot):
             self.load_extension('cogs.{0}'.format(name))
         load_extension('Utilities')
         load_extension('OpenDota')
+        load_extension('addDota')
+        load_extension('twitchLive')
+        load_extension('LoopTask')
+
 
     def initial_listener(self):
         self.add_listener(self.startup_message, 'on_ready')
