@@ -23,8 +23,10 @@ class Bot(commands.Bot):
         self.app_secret = config.App_Secret
 
     def initial_extensions(self):
-        self.load_extension('Utilities')
-        self.load_extension('OpenDota')
+        def load_extension(name):
+            self.load_extension('cogs.{0}'.format(name))
+        load_extension('Utilities')
+        load_extension('OpenDota')
 
     def initial_listener(self):
         self.add_listener(self.startup_message, 'on_ready')
