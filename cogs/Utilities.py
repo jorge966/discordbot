@@ -2,6 +2,7 @@ import botMain
 from discord.ext import commands
 import time
 import mongoDriver as md
+import discord
 
 guildDb = md.mongoConnection("127.0.0.1", "Channels", "JoinedChannels")
 
@@ -17,12 +18,13 @@ class Utilities(commands.Cog):
         print('Bot has been running for: {0:.2f} hours'.format(current_time))
         await ctx.send('Bot has been running for: **{0:.2f}** hours'.format(current_time))
 
+    @commands.Cog.listener()
     async def on_guild_join(self, guild):
         temp = {}
         temp['guild_id'] = guild.id
         temp['guild_name'] = guild.name
         temp['guild_owner_id'] = guild.owner_id
-        temp['base_text_channel'] = guild.text_channels[0]
+        temp['base_text_channel'] = guild.text_channels[0].id
         print(temp)
         temp['join_time'] = time.time()
         guildDb.insertOne(temp)
