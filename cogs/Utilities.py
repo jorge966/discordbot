@@ -18,13 +18,14 @@ class Utilities(commands.Cog):
         await ctx.send('Bot has been running for: **{0:.2f}** hours'.format(current_time))
 
     async def on_guild_join(self, guild):
-        guild = {}
-        guild['guild_id'] = guild.id
-        guild['guild_name'] = guild.name
-        guild['guild_owner_id'] = guild.owner_id
-        guild['base_text_channel'] = guild.text_channels[0]
-        guild['join_time'] = time.time()
-        guildDb.insertOne(guild)
+        temp = {}
+        temp['guild_id'] = guild.id
+        temp['guild_name'] = guild.name
+        temp['guild_owner_id'] = guild.owner_id
+        temp['base_text_channel'] = guild.text_channels[0]
+        print(temp)
+        temp['join_time'] = time.time()
+        guildDb.insertOne(temp)
 
 def setup(bot):
     util = Utilities(bot)

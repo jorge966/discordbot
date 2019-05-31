@@ -1,9 +1,7 @@
-import discord
 import config
 from discord.ext import commands
 import time
-import sched
-import asyncio
+
 
 
 class Bot(commands.Bot):

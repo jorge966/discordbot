@@ -18,7 +18,7 @@ class TaskDota(commands.Cog):
 
     @tasks.loop(seconds=10.0)
     async def slow_count(self):
-        #channel = bot.get_channel(547669771450187778)
+        channel = bot.get_channel(547669771450187778)
 
         vars_user = acctIdDb.getAllDocuments()
         vars_match = lastMatchDb.getAllDocuments()
