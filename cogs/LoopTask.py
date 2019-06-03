@@ -13,12 +13,11 @@ class TaskDota(commands.Cog):
         self.bot = bot
         self.slow_count.start()
 
-
-
-
     @tasks.loop(seconds=10.0)
     async def slow_count(self):
-        #channel = bot.get_channel(547669771450187778)
+        steve_channel = self.bot.get_guild(584036142295285794).text_channels[0]
+        jorge_channel = self.bot.get_guild(547669771450187776).text_channels[0]
+
 
         vars_user = acctIdDb.getAllDocuments()
         vars_match = lastMatchDb.getAllDocuments()
@@ -87,13 +86,17 @@ class TaskDota(commands.Cog):
 
                 if radiant_win:
                     if is_radiant:
+                        jorge_channel.send(persona_name + " won their last game" + " as " + temp_hero)
                         print(persona_name + " won their last game" + " as " + temp_hero)
                     else:
+                        jorge_channel.send(persona_name + " lost their last game" + " as " + temp_hero)
                         print(persona_name + " lost their last game" + " as " + temp_hero)
                 elif not radiant_win:
                     if not is_radiant:
+                        jorge_channel.send(persona_name + " won their last game" + " as " + temp_hero)
                         print(persona_name + " won their last game" + " as " + temp_hero)
                     else:
+                        jorge_channel.send(persona_name + " lost their last game" + " as " + temp_hero)
                         print(persona_name + " lost their last game" + " as " + temp_hero)
                 break
             else:

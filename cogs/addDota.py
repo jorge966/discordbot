@@ -1,13 +1,29 @@
 from discord.ext import commands
 import mongoDriver as md
+import json
 
 acctIdDb = md.mongoConnection("127.0.0.1", "matchDatabase", "Users")
 lastMatchDb = md.mongoConnection("127.0.0.1", "matchDatabase", "lastMatches")
+servicesDb = md.mongoConnection("127.0.0.1", "OpenDota", "OpenDotaServices")
 
 class AddDota(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    async def enableOpenDotaApi(self, ctx):
+        empty_follows_account = {'accounts': []}
+        empty_account_string = json.dumps(empty_follows_account)
+        guild_obj = {}
+        guild_obj['guild_id'] = ctx.guild.id
+        guild_obj['followed_accounts'] = empty_account_string
+        servicesDb.insertOne(guild_obj)
+
+    @commands.command()
+    async def test(self, ctx):
+        steve_guild = self.bot.get_guild(584036142295285794)
+        jorge_guild = self.bot.get_guild(547669771450187776)
 
     @commands.command()
     async def adduser(self, ctx, user, acct_id):
