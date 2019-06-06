@@ -12,6 +12,8 @@ class TaskDota(commands.Cog):
         self.openDotaDb = md.mongoConnection("127.0.0.1", "OpenDota", "OpenDotaServices")
         self.open_dota_task.start()
 
+    #<editor-fold> OpenDota Discord Commands
+
     # Add a guild to the OpenDota service
     @commands.command()
     async def addopendota(self, ctx):
@@ -54,6 +56,10 @@ class TaskDota(commands.Cog):
             guildDb.updateByField(attribute, update_attribute)
             await ctx.send("Removed {} to the OpenDota Service".format(account_id))
 
+    #</editor-fold>
+
+    #<editor-fold> OpenDota Background Loop
+
     # Defines the Loop that will run on Bot Start
     @tasks.loop(seconds=10.0)
     async def open_dota_task(self):
@@ -83,6 +89,8 @@ class TaskDota(commands.Cog):
                     filter = { 'account_id': account['account_id'] }
                     field = { 'last_match_id': opendota_match_id }
                     guildDb.updateByField(filter, field)
+
+    #</editor-fold>
 
     #<editor-fold> Api Functions
 
