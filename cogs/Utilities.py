@@ -25,7 +25,6 @@ class Utilities(commands.Cog):
         temp['guild_name'] = guild.name
         temp['guild_owner_id'] = guild.owner_id
         temp['base_text_channel'] = guild.text_channels[0].id
-        print(temp)
         temp['join_time'] = time.time()
         guildDb.insertOne(temp)
 
