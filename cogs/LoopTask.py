@@ -100,6 +100,7 @@ class TaskDota(commands.Cog):
                         print(persona_name + " lost their last game" + " as " + temp_hero)
                 break
             else:
+                print("check")
                 break
         vars_match.rewind()
         vars_user.rewind()
