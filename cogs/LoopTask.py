@@ -35,7 +35,7 @@ class TaskDota(commands.Cog):
     async def addaccount(self, ctx, account_id, nickname):
         filter = { 'guild_id': ctx.guild.id }
         guild = self.openDotaDb.getOneDocumentByFilter(filter)
-        if not guild['active']:
+        if not guild['active'] or guild is None:
             await ctx.send("You cannot add an account if you are not subscribed to the OpenDota service")
         else:
             accountObject = { 'account_id': account_id, 'nickname': nickname, 'last_match_id': 0, 'active': 1 }
@@ -48,11 +48,12 @@ class TaskDota(commands.Cog):
     async def removeaccount(self, ctx, account_id):
         filter = { 'guild_id': ctx.guild.id }
         guild = self.openDotaDb.getOneDocumentByFilter(filter)
-        if not guild['active']:
+        if not guild['active'] or guild is None:
             await ctx.send("You cannot remove an account if you are not subscribed to the OpenDota service")
         else:
             attribute = { 'account_id': account_id }
             update_attribute = { 'active': 0 }
+            guildDb = self.return_guild_db(ctx.guild.id)
             guildDb.updateByField(attribute, update_attribute)
             await ctx.send("Removed {} to the OpenDota Service".format(account_id))
 
