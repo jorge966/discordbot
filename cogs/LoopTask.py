@@ -1,109 +1,161 @@
 from discord.ext import tasks,commands
 import requests
 import json
+import time
 import mongoDriver as md
-
-
-acctIdDb = md.mongoConnection("127.0.0.1", "matchDatabase", "Users")
-lastMatchDb = md.mongoConnection("127.0.0.1", "matchDatabase", "lastMatches")
 
 class TaskDota(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.slow_count.start()
+        self.channelDb = md.mongoConnection("127.0.0.1", "Channels", "JoinedChannels")
+        self.openDotaDb = md.mongoConnection("127.0.0.1", "OpenDota", "OpenDotaServices")
+        self.open_dota_task.start()
 
+    #<editor-fold> OpenDota Discord Commands
+
+    # Add a guild to the OpenDota service
+    @commands.command()
+    async def addopendota(self, ctx):
+        attribute = { 'guild_id': ctx.guild.id }
+        update_attribute = { 'active': 1 }
+        self.openDotaDb.updateByField(attribute, update_attribute)
+        await ctx.send("You have successfully subscribed to the OpenDota service")
+
+    # Remove a guild from the OpenDota service
+    @commands.command()
+    async def removeopendota(self, ctx):
+        attribute = { 'guild_id': ctx.guild.id }
+        update_attribute = { 'active': 0 }
+        self.openDotaDb.updateByField(attribute, update_attribute)
+        await ctx.send("You have successfully unsubscribed to the OpenDota service")
+
+    # Add an account to the OpenDota service
+    @commands.command()
+    async def addaccount(self, ctx, account_id, nickname):
+        filter = { 'guild_id': ctx.guild.id }
+        guild = self.openDotaDb.getOneDocumentByFilter(filter)
+        if not guild['active'] or guild is None:
+            await ctx.send("You cannot add an account if you are not subscribed to the OpenDota service")
+        else:
+            accountObject = { 'account_id': account_id, 'nickname': nickname, 'last_match_id': 0, 'active': 1 }
+            guildDb = self.return_guild_db(ctx.guild.id)
+            guildDb.upsertOneByField({'account_id': account_id}, accountObject)
+            await ctx.send("Added {} to the OpenDota Service".format(nickname))
+
+    # Remove an account from the OpenDota service
+    @commands.command()
+    async def removeaccount(self, ctx, account_id):
+        filter = { 'guild_id': ctx.guild.id }
+        guild = self.openDotaDb.getOneDocumentByFilter(filter)
+        if not guild['active'] or guild is None:
+            await ctx.send("You cannot remove an account if you are not subscribed to the OpenDota service")
+        else:
+            attribute = { 'account_id': account_id }
+            update_attribute = { 'active': 0 }
+            guildDb = self.return_guild_db(ctx.guild.id)
+            guildDb.updateByField(attribute, update_attribute)
+            await ctx.send("Removed {} to the OpenDota Service".format(account_id))
+
+    #</editor-fold>
+
+    #<editor-fold> OpenDota Background Loop
+
+    # Defines the Loop that will run on Bot Start
     @tasks.loop(seconds=10.0)
-    async def slow_count(self):
-        steve_channel = self.bot.get_guild(584036142295285794).text_channels[0]
-        jorge_channel = self.bot.get_guild(547669771450187776).text_channels[0]
+    async def open_dota_task(self):
+        await self.bot.wait_until_ready()
+        activeGuilds = self.get_active_guilds()
 
+        for guild in activeGuilds:
+            channel = self.bot.get_guild(guild['guild_id']).text_channels[0]
+            activeAccounts = self.get_active_accounts(guild)
 
-        vars_user = acctIdDb.getAllDocuments()
-        vars_match = lastMatchDb.getAllDocuments()
+            for account in activeAccounts:
 
-        # Found User Bool
-        userFound = False
+                db_match_id = str(self.get_last_match(account['account_id'], guild['guild_id']))
+                opendota_match_id = str(self.opendota_recent_matches(account['account_id']))
 
-        # User Variable
-        foundUser = None
-        # Loop through users
-        for user in vars_user:
-            for match in vars_match:
-                if match['account_id'] == str(user["account_id"]):
-                    foundUser = user
-                    userFound = True
-                    break
-        #need to rewind mongo cursor after every use
-        vars_match.rewind()
-        vars_user.rewind()
+                if not db_match_id == opendota_match_id:
+                    matchData = self.match_information(opendota_match_id, account['account_id'])
 
-        user_id = foundUser["account_id"]
-
-        url = "https://api.opendota.com/api/players/" + str(user_id) + "/recentMatches"
-        #print(url)
-        recent = requests.get(url)
-        #print("getting recent matches...")
-        json_data = json.loads(recent.text)
-        updated_match_id = json_data[0]['match_id']
-        newMatch = None
-        foundmatch = False
-        oldMatch = None
-        for item in vars_match:
-            oldMatch = item['match_id']
-            break
-        vars_match.rewind()
-
-        for item in vars_match:
-            if updated_match_id != item['match_id']:
-                item['match_id'] = updated_match_id
-                foundmatch = True
-                newMatch = item
-                lastMatchDb.updateOneByMatchid(oldMatch, newMatch['match_id'])
-                print("updated")
-                url = "https://api.opendota.com/api/matches/" + str(newMatch['match_id'])
-                print("getting match...")
-                data = requests.get(url)
-                json_data2 = json.loads(data.text)
-                players = json_data2["players"]
-                temp = None
-                temp_hero = None
-
-                for item in players:
-                    if user_id == item["account_id"]:
-                        temp = item
-                persona_name = temp["personaname"]
-                radiant_win = temp["radiant_win"]
-                is_radiant = temp["isRadiant"]
-                hero_id = temp["hero_id"]
-
-                get_hero = requests.get("https://api.opendota.com/api/heroes")
-                load_hero = json.loads(get_hero.text)
-
-                for item in load_hero:
-                    if hero_id == item["id"]:
-                        temp_hero = item["localized_name"]
-
-                if radiant_win:
-                    if is_radiant:
-                        jorge_channel.send(persona_name + " won their last game" + " as " + temp_hero)
-                        print(persona_name + " won their last game" + " as " + temp_hero)
+                    win_msg = "{} won their recent match as {}".format(matchData['username'], matchData['hero_name'])
+                    loss_msg = "{} lost their recent match as {}".format(matchData['username'], matchData['hero_name'])
+                    if (matchData['is_radiant'] and matchData['radiant_win']) or (not matchData['is_radiant'] and not matchData['radiant_win']):
+                        await channel.send(win_msg)
                     else:
-                        jorge_channel.send(persona_name + " lost their last game" + " as " + temp_hero)
-                        print(persona_name + " lost their last game" + " as " + temp_hero)
-                elif not radiant_win:
-                    if not is_radiant:
-                        jorge_channel.send(persona_name + " won their last game" + " as " + temp_hero)
-                        print(persona_name + " won their last game" + " as " + temp_hero)
-                    else:
-                        jorge_channel.send(persona_name + " lost their last game" + " as " + temp_hero)
-                        print(persona_name + " lost their last game" + " as " + temp_hero)
-                break
-            else:
-                print("check")
-                break
-        vars_match.rewind()
-        vars_user.rewind()
+                        await channel.send(loss_msg)
+
+                    guildDb = self.return_guild_db(guild['guild_id'])
+                    filter = { 'account_id': account['account_id'] }
+                    field = { 'last_match_id': opendota_match_id }
+                    guildDb.updateByField(filter, field)
+
+    #</editor-fold>
+
+    #<editor-fold> Api Functions
+
+    # Returns the most recent match ID given account ID from opendota
+    def opendota_recent_matches(self, account_id):
+        url = "https://api.opendota.com/api/players/{}/recentMatches".format(account_id)
+        json_data = json.loads(requests.get(url).text)
+        return json_data[0]['match_id']
+
+    # Returns the hero name given hero ID from opendota
+    def opendota_hero_name(self, hero_id):
+        json_data = json.loads(requests.get("https://api.opendota.com/api/heroes").text)
+        for item in json_data:
+            if str(hero_id) == str(item["id"]):
+                return item["localized_name"]
+        return "Hero ID not found"
+
+    # Returns a JSON object with the specified match ID from opendota
+    def opendota_get_match(self, match_id):
+        url = "https://api.opendota.com/api/matches/{}".format(match_id)
+        return json.loads(requests.get(url).text)
+
+    #</editor-fold>
+
+    #<editor-fold> Helper Functions
+
+    # Get match information given match ID
+    def match_information(self, match_id, account_id):
+        matchDetails = self.opendota_get_match(match_id)
+        players = matchDetails["players"]
+        for player in players:
+            if str(account_id) == str(player['account_id']):
+                return {
+                    'account_id': account_id,
+                    'username': player['personaname'],
+                    'is_radiant': player['isRadiant'],
+                    'radiant_win': player['radiant_win'],
+                    'hero_name': self.opendota_hero_name(player['hero_id'])
+                }
+        return "Account ID not found in this Match"
+
+    # Get all active guilds
+    def get_active_guilds(self):
+        filter = { 'active': 1 }
+        return self.openDotaDb.getAllDocumentsByFilter(filter)
+
+    # Get all active accounts in guild
+    def get_active_accounts(self, guild):
+        filter = { 'active': 1 }
+        guildDb = self.return_guild_db(guild['guild_id'])
+        return guildDb.getAllDocumentsByFilter(filter)
+
+    # Get last match_id for specified account id
+    def get_last_match(self, account_id, guild_id):
+        filter = { 'account_id': account_id }
+        guildDb = self.return_guild_db(guild_id)
+        obj = guildDb.getOneDocumentByFilter(filter)
+        return obj['last_match_id']
+
+    # Return a mongo connection object with specified guild_id
+    def return_guild_db(self, guild_id):
+        return md.mongoConnection("127.0.0.1", "OpenDotaGuildDatabases", str(guild_id))
+
+    #</editor-fold>
 
 def setup(bot):
     taskdota = TaskDota(bot)
