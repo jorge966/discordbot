@@ -28,6 +28,7 @@ class Bot(commands.Bot):
         load_extension('addDota')
         load_extension('twitchLive')
         load_extension('LoopTask')
+        load_extension('WebScraper')
 
 
     def initial_listener(self):
