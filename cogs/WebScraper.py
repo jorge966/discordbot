@@ -22,24 +22,38 @@ class CheckPoe(commands.Cog):
         json_data = json.loads(poe_web.text)
 
 
-        LastActive = None
+
         user_name = None
         ascendency = None
         level = None
         league = None
-        for item in json_data:
-            if item['league'] == 'Hardcore Legion':
-                LastActive = item['lastActive']
-                print(LastActive)
-                user_name = item['name']
-                ascendency = item['class']
-                level = str(item['level'])
-                league = item['league']
+        for character in json_data:
+            for key, value in character.items():
+                if key == 'lastActive':
+                    user_name = character['name']
+                    league = character['league']
+                    ascendency = character['class']
+                    level = str(character['level'])
 
-        if LastActive == True and league == 'Hardcore Legion':
-            await ctx.send('Your last played character is ' + user_name + ' level ' + level + ' as a ' + ascendency + ' in ' + league)
+            print(type(user_name))
+            print(type(level))
+            print(type(ascendency))
+            print(type(league))
+
+            # if character['lastActive'] not in json_data:
+            #     continue
+            # elif character['league'] == 'Hardcore Legion' and character['lastActive'] == True:
+            #     LastActive = character['lastActive']
+            #     print(LastActive)
+            #     user_name = character['name']
+            #     ascendency = character['class']
+            #     level = str(character['level'])
+            #     league = character['league']
+
+        if league == 'Hardcore Legion':
+                await ctx.send('Your last played character is ' + user_name + ' level ' + level + ' as a ' + ascendency + ' in ' + league)
         else:
-            await ctx.send('I dont see your last character in Hardcore legion so i think you died or havent played in the current league')
+                await ctx.send('I dont see your last character in Hardcore legion so i think you died or havent played in the current league')
 def setup(bot):
     checkaccount = CheckPoe(bot)
     bot.add_cog(checkaccount)
