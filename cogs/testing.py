@@ -27,8 +27,9 @@ class CheckPoe(commands.Cog):
             activeAccounts = self.get_active_accounts()  # returns all active accounts
 
             for account in activeAccounts:
-                get_api_info = self.getlastActiveApi(account['account_name'])  # checks the api with the account name
+                get_api_info = self.getlastActiveApi(account['account_name'])# checks the api with the account name
                 lastactive = self.get_lastActiveDB()  # checks the last active database
+
 
 
                 for active in lastactive:
@@ -76,8 +77,8 @@ class CheckPoe(commands.Cog):
                 if key == 'lastActive':
                     #pprint.pprint(character)
                     for item in check_accounts:
+                        print(item)
                         if account_name == item['account_name']:
-                            print(item)
 
                             accountname = {'account_name': account_name}
                             Char_name = {'name': character['name']}
@@ -90,7 +91,6 @@ class CheckPoe(commands.Cog):
                                 'level': character['level']
                             }
                         elif account_name != item['account_name']:
-                            print(item)
                             addActive = {'account_name': account_name, 'name': character['name']}
                             self.lastActive.insertOne(addActive)
 
