@@ -32,14 +32,17 @@ class CheckPoe(commands.Cog):
 
 
 
+
                 for active in lastactive:
+                    #print(active)
 
                     last_active = get_api_info['name']#self.getlastActiveApi(account['account_name'])  # api's current active name
                     #self.getlastActiveApi(This_Is_My_New_ED_rip)
 
+
                     if last_active == active['name']:
                         await ctx.send("{}'s last active character: {} is still alive in {}".format(account['name'],last_active,get_api_info['league']))
-                        break
+
 
                     elif not last_active == active['name']:
                         checkpoe = self.getpoeChar(account['account_name'], last_active)
@@ -69,37 +72,36 @@ class CheckPoe(commands.Cog):
         #pprint.pprint(poeDetails)
         check_accounts = self.get_active_accounts()
 
-        #print("1")
-        for character in poeDetails:
-
-
-            for key, value in character.items():
+        for character in poeDetails: #check poe api characters
+            for key, value in character.items(): #searches the api for a specific char that has a key of "last Active"
                 if key == 'lastActive':
-                    #pprint.pprint(character)
-                    for item in check_accounts:
-                        print(item)
-                        if account_name == item['account_name']:
+                    is_in_list = False
+                    for item in check_accounts:# check the account database for current accounts that are active
 
-                            accountname = {'account_name': account_name}
-                            Char_name = {'name': character['name']}
-                            self.lastActive.updateByField(accountname,Char_name)
+                        if account_name.upper() == item['account_name'].upper():
+                            is_in_list = True
 
-                            return {
-                                'name': character['name'],
-                                'league': character['league'],
-                                'class': character['class'],
-                                'level': character['level']
-                            }
-                        elif account_name != item['account_name']:
-                            addActive = {'account_name': account_name, 'name': character['name']}
-                            self.lastActive.insertOne(addActive)
+                    if is_in_list:
+                        accountname = {'account_name': account_name}
+                        Char_name = {'name': character['name']}
+                        self.lastActive.updateByField(accountname, Char_name)
 
-                            return {
-                                'name': character['name'],
-                                'league': character['league'],
-                                'class': character['class'],
-                                'level': character['level']
-                            }
+                        return {
+                            'name': character['name'],
+                            'league': character['league'],
+                            'class': character['class'],
+                            'level': character['level']
+                        }
+                    else:
+                        addActive = {'account_name': account_name, 'name': character['name']}
+                        self.lastActive.insertOne(addActive)
+
+                        return {
+                            'name': character['name'],
+                            'league': character['league'],
+                            'class': character['class'],
+                            'level': character['level']
+                        }
 
 
         return "Account Name not found"
