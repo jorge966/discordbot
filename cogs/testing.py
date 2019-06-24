@@ -41,15 +41,15 @@ class CheckPoe(commands.Cog):
 
 
                     if last_active == active['name']:
-                        await ctx.send("{}'s last active character: {} is still alive in {}".format(account['name'],last_active,get_api_info['league']))
+                        await ctx.send("{}'s has no recent death's in Hardcore Legion".format(account['name']))
 
 
                     elif not last_active == active['name']:
                         checkpoe = self.getpoeChar(account['account_name'], last_active)
                         if checkpoe != 'Hardcore Legion':
-                                await ctx.send("{}'s last active character: {} is still alive in {}".format(account['name'],lastactive['name'],get_api_info['league']))
-                                time.sleep(2)
-                                await ctx.send("but it seems before this his last Character saved here {} died".format(lastactive['name']))
+                                await ctx.send("{}'s character: {}, has Died since the last time you checked".format(account['name'],lastactive['name']))
+
+
 
 
 
@@ -71,37 +71,40 @@ class CheckPoe(commands.Cog):
         poeDetails = self.getpoeApi(account_name)
         #pprint.pprint(poeDetails)
         check_accounts = self.get_active_accounts()
+        get_lastactiveDB = self.get_lastActiveDB()
 
-        for character in poeDetails: #check poe api characters
-            for key, value in character.items(): #searches the api for a specific char that has a key of "last Active"
-                if key == 'lastActive':
-                    is_in_list = False
-                    for item in check_accounts:# check the account database for current accounts that are active
-
-                        if account_name.upper() == item['account_name'].upper():
+        for character in poeDetails: #check poe api character# #searches the api for a specific char that has a key of "last Active"
+             if character['league'] == 'Hardcore Legion':
+                print(character)
+                is_in_list = False
+                for item in check_accounts:# check the account database for current accounts that are active
+                    for char_info in get_lastactiveDB:
+                        print(account_name)
+                        print(item['account_name'])
+                        print(character['name'])
+                        print(char_info['name'])
+                        if account_name.upper() == item['account_name'].upper() and character['name'].upper() == char_info['name'].upper():
                             is_in_list = True
 
-                    if is_in_list:
-                        accountname = {'account_name': account_name}
-                        Char_name = {'name': character['name']}
-                        self.lastActive.updateByField(accountname, Char_name)
+                print(is_in_list)
 
-                        return {
-                            'name': character['name'],
-                            'league': character['league'],
-                            'class': character['class'],
-                            'level': character['level']
-                        }
-                    else:
-                        addActive = {'account_name': account_name, 'name': character['name']}
-                        self.lastActive.insertOne(addActive)
+                if is_in_list == True:
+                    return  {
+                        'name': character['name'],
+                        'league': character['league'],
+                        'class': character['class'],
+                        'level': character['level']
+                    }
+                else:
+                    addActive = {'account_name': account_name, 'name': character['name'],'league': character['league']}
+                    self.lastActive.insertOne(addActive)
 
-                        return {
-                            'name': character['name'],
-                            'league': character['league'],
-                            'class': character['class'],
-                            'level': character['level']
-                        }
+                    return {
+                        'name': character['name'],
+                        'league': character['league'],
+                        'class': character['class'],
+                        'level': character['level']
+                    }
 
 
         return "Account Name not found"
