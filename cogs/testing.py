@@ -72,30 +72,45 @@ class CheckPoe(commands.Cog):
         #pprint.pprint(poeDetails)
         check_accounts = self.get_active_accounts()
         get_lastactiveDB = self.get_lastActiveDB()
-
+        char_list = []
         for character in poeDetails: #check poe api character# #searches the api for a specific char that has a key of "last Active"
              if character['league'] == 'Hardcore Legion':
-                print(character)
-                is_in_list = False
+                char_list.append(character['name'])
+
+                #print(character)
+                #is_in_list = False
                 for item in check_accounts:# check the account database for current accounts that are active
                     for char_info in get_lastactiveDB:
                         print(account_name)
                         print(item['account_name'])
                         print(character['name'])
                         print(char_info['name'])
+                        is_in_list = False
                         if account_name.upper() == item['account_name'].upper() and character['name'].upper() == char_info['name'].upper():
                             is_in_list = True
+                            print(is_in_list)
+                        elif account_name.upper() == item['account_name'].upper() and character['name'].upper() != char_info['name'].upper():
+                            is_in_list = False
+                            print(is_in_list)
+                        elif account_name.upper() != item['account_name'].upper() and character['name'].upper() != char_info['name'].upper():
+                            print('skip!')
+                            continue
+                        elif account_name.upper() != item['account_name'].upper() and character['name'].upper() == char_info['name'].upper():
+                            print("skip")
+                            continue
 
-                print(is_in_list)
+
+                #print(is_in_list)
 
                 if is_in_list == True:
-                    return  {
+                    return {
                         'name': character['name'],
                         'league': character['league'],
                         'class': character['class'],
                         'level': character['level']
                     }
                 else:
+                    print(account_name, character['name'])
                     addActive = {'account_name': account_name, 'name': character['name'],'league': character['league']}
                     self.lastActive.insertOne(addActive)
 
@@ -106,7 +121,7 @@ class CheckPoe(commands.Cog):
                         'level': character['level']
                     }
 
-
+        print(char_list)
         return "Account Name not found"
 
 
