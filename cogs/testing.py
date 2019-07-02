@@ -6,7 +6,7 @@ import config
 import time
 import pprint
 
-#'name': 'spin_my_ass_fast', 'league': 'Hardcore Legion', 'classId': 4, 'ascendancyClass': 3, 'class': 'Champion', 'level': 86, 'experience': 1496324749, 'lastActive': True}
+
 
 
 class CheckPoe(commands.Cog):

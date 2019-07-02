@@ -5,7 +5,6 @@ import json
 import config
 import time
 
-#'name': 'spin_my_ass_fast', 'league': 'Hardcore Legion', 'classId': 4, 'ascendancyClass': 3, 'class': 'Champion', 'level': 86, 'experience': 1496324749, 'lastActive': True}
 
 #Work in progress
 class CheckPoe(commands.Cog):
